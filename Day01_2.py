@@ -28,6 +28,10 @@ for word in _input:
         idx_of_digit_string = word.find(key)
         if idx_of_digit_string != -1:
             digit_strings_in_word.append((idx_of_digit_string, value))
+            idx_of_digit_string = word.find(key, idx_of_digit_string+1)
+            if idx_of_digit_string != -1:
+                digit_strings_in_word.append((idx_of_digit_string, value))
+                
     print("Digits in word:", digit_strings_in_word)
     print("Integers in word:", digits)         
     res = {}
