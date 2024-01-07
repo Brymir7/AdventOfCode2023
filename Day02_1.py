@@ -10,13 +10,20 @@ MAX_BLUE = 14
 res = {}
 
 for game in _input:
-    _id = game.split(":")[0][-1]
+    _id_idx = game.find(":")
+    _id_str = ""
+    while game[_id_idx-1].isdigit():
+        _id = game[_id_idx-1]
+        _id_str += _id
+        _id_idx -= 1
+    _id = _id_str[::-1]
     res[_id] = True
     mini_games = game.split(";")
-    amount_blue = 0
-    amount_red = 0
-    amount_green = 0
+
     for mini_game in mini_games:
+        amount_blue = 0
+        amount_red = 0
+        amount_green = 0
         if "blue" in mini_game:
             idx = mini_game.find("blue")
             reversed_string_numbers = ""
@@ -38,17 +45,26 @@ for game in _input:
                 reversed_string_numbers+=mini_game[idx-2]
                 idx -= 1
             amount_green += int(reversed_string_numbers[::-1])
-        print("blue", amount_blue)
-        print("green", amount_green)
-        print("red", amount_red)
-    if amount_blue > MAX_BLUE:
-        res[_id] = False
-    if amount_red > MAX_RED:
-        res[_id] = False
-    if amount_green > MAX_GREEN:
-        res[_id] = False
+
+        if amount_blue > MAX_BLUE:
+            print("_id", _id)
+            res[_id] = False
+        if amount_red > MAX_RED:
+            print("_id:", _id)
+            res[_id] = False
+        if amount_green > MAX_GREEN:
+            print("_id:", _id)
+            res[_id] = False
+        if _id == "16":
+            print("Blue:", amount_blue)
+            print("Red:", amount_red)
+            print("Green:", amount_green)
+            
+            
 res_sum = 0
 for key, value in res.items():
+    if value:
+        print("ID:", key, "is valid")
     if value:
         res_sum += int(key)
 print(res_sum)
