@@ -1,42 +1,12 @@
 import math
 import sys
+from collections import deque
 
 sys.setrecursionlimit(1000000)
 _input = None
 with open("inputs/10.txt", "r") as f:
     _input = f.read()
 _input = _input.split("\n")
-
-# def dfs(
-#     matrix, curr_pos_x, curr_pos_y, min_x, max_x, min_y, max_y, prev_symbol, currLength, maxLength
-# ):
-#     if not matrix[curr_pos_y][curr_pos_x].isdigit():
-#         return currLength
-
-#     res = False
-#     offsets = [
-#         (0, -1),
-#         (0, 1),
-#         (1, 0),
-#         (-1, 0),
-#         (1, 1),
-#         (-1, -1),
-#         (-1, 1),
-#         (1, -1),
-#     ]
-#     assert(len(set(offsets)) == len(offsets))
-#     for offset_x, offset_y in offsets:
-#         if (
-#             curr_pos_x + offset_x < min_x
-#             or curr_pos_x + offset_x >= max_x
-#             or curr_pos_y + offset_y < min_y
-#             or curr_pos_y + offset_y >= max_y
-#         ):
-#             continue
-#         if matrix[curr_pos_y + offset_y][curr_pos_x + offset_x] != symbol and not matrix[curr_pos_y + offset_y][curr_pos_x + offset_x].isdigit():
-#             res = True
-#             break
-#     return res
 
 # DOWN, UP, LEFT, RIGHT
 valid_direction_into_pipe_mapping = {
@@ -117,11 +87,13 @@ for y_pos in range(0, len(matrix)):
             break
 
 
-def dfs_without_revisiting(curr_x, curr_y, matrix, visited, positions, currMaxPipeLength):
+def dfs_without_revisiting(
+    curr_x, curr_y, matrix, visited, positions, currMaxPipeLength
+):
     if (curr_x, curr_y) in visited:
         return
     visited.add((curr_x, curr_y))
-    positions.append(matrix[curr_y][curr_x])
+    positions.append((curr_x, curr_y))
     valid_directions = valid_directions_out_of_pipe_mapping[matrix[curr_y][curr_x]]
     for direction in valid_directions:
         if check_valid_path((curr_x, curr_y), direction, len(matrix[0]), len(matrix)):
@@ -133,7 +105,31 @@ def dfs_without_revisiting(curr_x, curr_y, matrix, visited, positions, currMaxPi
                 next_x, next_y = curr_x - 1, curr_y
             elif direction == "R":
                 next_x, next_y = curr_x + 1, curr_y
-            dfs_without_revisiting(next_x, next_y, matrix, visited, positions, currMaxPipeLength + 1)
+            dfs_without_revisiting(
+                next_x, next_y, matrix, visited, positions, currMaxPipeLength + 1
+            )
+
+
+def adjust_border_positions(curr_x, curr_y, border_positions):
+    if f"max_y_for{curr_x}" not in border_positions:
+        border_positions[f"curr_x{curr_x}"] = curr_x
+
+    border_positions["MAX_X"] = max(border_positions["MAX_X"], curr_x)
+    border_positions["MAX_Y"] = max(border_positions["MAX_Y"], curr_y)
+    border_positions["MIN_X"] = min(border_positions["MIN_X"], curr_x)
+    border_positions["MIN_Y"] = min(border_positions["MIN_Y"], curr_y)
+
+
+def raytrace_polygon(curr_x, curr_y, matrix, pipe_positions):
+    number_of_intersections = 0
+
+    for x_pos in range(curr_x):
+        if (x_pos, curr_y) not in pipe_positions:
+            continue
+        if matrix[curr_y][x_pos] in ["J", "L", "|", 'S']:
+            number_of_intersections += 1
+
+    return number_of_intersections
 
 
 positions_to_explore = [(starting_tuple_position[0], starting_tuple_position[1])]
@@ -143,6 +139,18 @@ positions = []
 
 while positions_to_explore:
     curr_x, curr_y = positions_to_explore.pop()
-    dfs_without_revisiting(curr_x, curr_y, matrix, visited, positions, currMaxPipeLength)
+    dfs_without_revisiting(
+        curr_x, curr_y, matrix, visited, positions, currMaxPipeLength
+    )
+# Day 01 result
+# print(len(positions) // 2)
 
-print(len(positions)//2)
+valid_tiles = 0
+for y_pos in range(0, len(matrix)):
+    for x_pos in range(0, matrix[y_pos].__len__()):
+        if (x_pos, y_pos) in positions:
+            continue
+        if raytrace_polygon(x_pos, y_pos, matrix, set(positions)) % 2 == 1:
+            valid_tiles += 1
+
+print(valid_tiles)
